@@ -1,0 +1,55 @@
+plugins {
+    id 'application'
+    id 'com.gradleup.shadow' version '8.3.5'
+}
+
+group = 'fr.ikisource'
+version = '0.1.0'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    javalinVersion   = '6.3.0'
+    jteVersion       = '3.1.16'
+    slf4jVersion     = '2.0.16'
+    postgresVersion  = '42.7.4'
+    hikariVersion    = '6.2.1'
+    flywayVersion    = '10.20.1'
+    jooqVersion      = '3.19.15'
+}
+
+dependencies {
+    implementation "io.javalin:javalin:${javalinVersion}"
+    implementation "io.javalin:javalin-rendering:${javalinVersion}"
+    implementation "gg.jte:jte:${jteVersion}"
+    implementation "gg.jte:jte-runtime:${jteVersion}"
+    implementation "org.slf4j:slf4j-simple:${slf4jVersion}"
+
+    implementation "org.postgresql:postgresql:${postgresVersion}"
+    implementation "com.zaxxer:HikariCP:${hikariVersion}"
+    implementation "org.flywaydb:flyway-core:${flywayVersion}"
+    runtimeOnly    "org.flywaydb:flyway-database-postgresql:${flywayVersion}"
+    implementation "org.jooq:jooq:${jooqVersion}"
+}
+
+application {
+    mainClass = 'fr.ikisource.biblion.Application'
+}
+
+tasks.named('shadowJar') {
+    archiveBaseName.set('biblion')
+    archiveClassifier.set('all')
+    mergeServiceFiles()
+}
+
+tasks.named('run') {
+    standardInput = System.in
+}
