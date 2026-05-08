@@ -2,6 +2,11 @@ package fr.ikisource.biblion;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import fr.ikisource.biblion.book.application.GetBookByIdUseCase;
+import fr.ikisource.biblion.book.domain.api.GetBookById;
+import fr.ikisource.biblion.book.domain.spi.BookRepository;
+import fr.ikisource.biblion.book.infrastructure.BookController;
+import fr.ikisource.biblion.book.infrastructure.BookJooqRepository;
 import gg.jte.ContentType;
 import gg.jte.TemplateEngine;
 import gg.jte.resolve.DirectoryCodeResolver;
@@ -44,6 +49,10 @@ public class Application {
         });
 
         app.get("/ping", ctx -> ctx.html("<p>Pong! " + Instant.now() + "</p>"));
+
+        BookRepository bookRepository = new BookJooqRepository(db);
+        GetBookById getBookById = new GetBookByIdUseCase(bookRepository);
+        new BookController(getBookById).register(app);
 
         app.start(8080);
     }
