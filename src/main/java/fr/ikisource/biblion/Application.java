@@ -2,12 +2,12 @@ package fr.ikisource.biblion;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import fr.ikisource.biblion.book.application.AddBookByIsbnUseCase;
+import fr.ikisource.biblion.book.application.AddBookUseCase;
 import fr.ikisource.biblion.book.application.DeleteBookUseCase;
 import fr.ikisource.biblion.book.application.GetBookByIdUseCase;
 import fr.ikisource.biblion.book.application.ListBooksUseCase;
 import fr.ikisource.biblion.book.application.LookupBookByIsbnUseCase;
-import fr.ikisource.biblion.book.domain.api.AddBookByIsbn;
+import fr.ikisource.biblion.book.domain.api.AddBook;
 import fr.ikisource.biblion.book.domain.api.DeleteBook;
 import fr.ikisource.biblion.book.domain.api.GetBookById;
 import fr.ikisource.biblion.book.domain.api.ListBooks;
@@ -53,13 +53,13 @@ public class Application {
         BookMetadataLookup metadataLookup = new GoogleBooksMetadataLookup();
         GetBookById getBookById = new GetBookByIdUseCase(bookRepository);
         ListBooks listBooks = new ListBooksUseCase(bookRepository);
-        AddBookByIsbn addBookByIsbn = new AddBookByIsbnUseCase(bookRepository, metadataLookup);
+        AddBook addBook = new AddBookUseCase(bookRepository, metadataLookup);
         LookupBookByIsbn lookupBookByIsbn = new LookupBookByIsbnUseCase(bookRepository, metadataLookup);
         DeleteBook deleteBook = new DeleteBookUseCase(bookRepository);
 
         app.get("/", ctx -> ctx.render("index.jte", Map.of("books", listBooks.execute())));
         app.get("/ping", ctx -> ctx.html("<p>Pong! " + Instant.now() + "</p>"));
-        new BookController(getBookById, listBooks, addBookByIsbn, lookupBookByIsbn, deleteBook).register(app);
+        new BookController(getBookById, listBooks, addBook, lookupBookByIsbn, deleteBook).register(app);
 
         app.start(8080);
     }

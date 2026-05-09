@@ -19,20 +19,18 @@
                   if (event.detail.successful) { this.reset(); f.textContent = ''; document.getElementById('book-preview').innerHTML = ''; }
                   else { f.textContent = event.detail.xhr.responseText || 'Erreur'; }
               ">
-            <label for="isbn">ISBN <small>(obligatoire)</small></label>
-            <input type="text" id="isbn" name="isbn" required placeholder="9782070408504"
+            <label for="isbn">ISBN <small>(optionnel)</small></label>
+            <input type="text" id="isbn" name="isbn" placeholder="9782070408504"
                    hx-get="/books/lookup"
                    hx-trigger="change, keyup changed delay:500ms"
                    hx-target="#book-preview"
                    hx-swap="innerHTML">
             <div id="book-preview"></div>
-            <details>
-                <summary>Saisie manuelle (si l'ISBN n'est pas reconnu)</summary>
-                <label for="title">Titre</label>
-                <input type="text" id="title" name="title">
-                <label for="author">Auteur</label>
-                <input type="text" id="author" name="author">
-            </details>
+
+            <label for="title">Titre <small>(obligatoire si pas trouvé via ISBN)</small></label>
+            <input type="text" id="title" name="title">
+            <label for="author">Auteur</label>
+            <input type="text" id="author" name="author">
             <button type="submit">Ajouter</button>
         </form>
         <p id="form-feedback" role="alert"></p>

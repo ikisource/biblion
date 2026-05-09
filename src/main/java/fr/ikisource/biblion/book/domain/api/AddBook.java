@@ -3,7 +3,7 @@ package fr.ikisource.biblion.book.domain.api;
 import fr.ikisource.biblion.book.domain.Book;
 import fr.ikisource.biblion.book.domain.Isbn;
 
-public interface AddBookByIsbn {
+public interface AddBook {
 
     Book execute(Command command);
 

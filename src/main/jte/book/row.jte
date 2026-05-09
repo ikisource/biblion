@@ -4,7 +4,7 @@
 <tr>
     <td>${book.title()}</td>
     <td>${book.author() != null ? book.author() : ""}</td>
-    <td><small>${book.isbn().value()}</small></td>
+    <td><small>${book.isbn() != null ? book.isbn().value() : "—"}</small></td>
     <td>
         <button class="secondary outline"
                 hx-delete="/books/${book.id().value()}"

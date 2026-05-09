@@ -5,7 +5,7 @@ import fr.ikisource.biblion.book.domain.BookAlreadyExistsException;
 import fr.ikisource.biblion.book.domain.BookId;
 import fr.ikisource.biblion.book.domain.Isbn;
 import fr.ikisource.biblion.book.domain.MissingBookTitleException;
-import fr.ikisource.biblion.book.domain.api.AddBookByIsbn;
+import fr.ikisource.biblion.book.domain.api.AddBook;
 import fr.ikisource.biblion.book.domain.api.DeleteBook;
 import fr.ikisource.biblion.book.domain.api.GetBookById;
 import fr.ikisource.biblion.book.domain.api.ListBooks;
@@ -22,18 +22,18 @@ public class BookController {
 
     private final GetBookById getBookById;
     private final ListBooks listBooks;
-    private final AddBookByIsbn addBookByIsbn;
+    private final AddBook addBook;
     private final LookupBookByIsbn lookupBookByIsbn;
     private final DeleteBook deleteBook;
 
     public BookController(GetBookById getBookById,
                           ListBooks listBooks,
-                          AddBookByIsbn addBookByIsbn,
+                          AddBook addBook,
                           LookupBookByIsbn lookupBookByIsbn,
                           DeleteBook deleteBook) {
         this.getBookById = getBookById;
         this.listBooks = listBooks;
-        this.addBookByIsbn = addBookByIsbn;
+        this.addBook = addBook;
         this.lookupBookByIsbn = lookupBookByIsbn;
         this.deleteBook = deleteBook;
     }
@@ -86,12 +86,12 @@ public class BookController {
     }
 
     private void create(Context ctx) {
-        Isbn isbn = parseIsbn(ctx.formParam("isbn"));
+        Isbn isbn = parseOptionalIsbn(ctx.formParam("isbn"));
         String manualTitle = trimToNull(ctx.formParam("title"));
         String manualAuthor = trimToNull(ctx.formParam("author"));
         Book book;
         try {
-            book = addBookByIsbn.execute(new AddBookByIsbn.Command(isbn, manualTitle, manualAuthor));
+            book = addBook.execute(new AddBook.Command(isbn, manualTitle, manualAuthor));
         } catch (BookAlreadyExistsException e) {
             throw new ConflictResponse(e.getMessage());
         } catch (MissingBookTitleException e) {
@@ -112,9 +112,9 @@ public class BookController {
         }
     }
 
-    private static Isbn parseIsbn(String raw) {
+    private static Isbn parseOptionalIsbn(String raw) {
         if (raw == null || raw.isBlank()) {
-            throw new BadRequestResponse("ISBN is required");
+            return null;
         }
         try {
             return new Isbn(raw);
@@ -130,7 +130,10 @@ public class BookController {
     }
 
     private static BookResponse toResponse(Book book) {
-        return new BookResponse(book.id().value(), book.isbn().value(), book.title(), book.author());
+        return new BookResponse(book.id().value(),
+                book.isbn() != null ? book.isbn().value() : null,
+                book.title(),
+                book.author());
     }
 
     private record BookResponse(long id, String isbn, String title, String author) {}

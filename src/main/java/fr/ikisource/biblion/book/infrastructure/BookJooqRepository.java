@@ -67,7 +67,7 @@ public class BookJooqRepository implements BookRepository {
     @Override
     public Book save(Book book) {
         Long id = db.insertInto(DSL.table("book"))
-                .set(DSL.field("isbn", String.class), book.isbn().value())
+                .set(DSL.field("isbn", String.class), book.isbn() != null ? book.isbn().value() : null)
                 .set(DSL.field("title", String.class), book.title())
                 .set(DSL.field("author", String.class), book.author())
                 .returning(DSL.field("id", Long.class))
@@ -77,9 +77,10 @@ public class BookJooqRepository implements BookRepository {
     }
 
     private Book toBook(Record record) {
+        String rawIsbn = record.get("isbn", String.class);
         return new Book(
                 new BookId(record.get("id", Long.class)),
-                new Isbn(record.get("isbn", String.class)),
+                rawIsbn != null ? new Isbn(rawIsbn) : null,
                 record.get("title", String.class),
                 record.get("author", String.class)
         );
