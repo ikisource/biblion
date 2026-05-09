@@ -31,3 +31,6 @@ Thumbs.db
 
 # Claude Code
 .claude/
+
+# JTE generated classes (compiled at runtime)
+jte-classes/
