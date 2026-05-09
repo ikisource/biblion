@@ -2,11 +2,21 @@ package fr.ikisource.biblion;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import fr.ikisource.biblion.book.application.AddBookByIsbnUseCase;
+import fr.ikisource.biblion.book.application.DeleteBookUseCase;
 import fr.ikisource.biblion.book.application.GetBookByIdUseCase;
+import fr.ikisource.biblion.book.application.ListBooksUseCase;
+import fr.ikisource.biblion.book.application.LookupBookByIsbnUseCase;
+import fr.ikisource.biblion.book.domain.api.AddBookByIsbn;
+import fr.ikisource.biblion.book.domain.api.DeleteBook;
 import fr.ikisource.biblion.book.domain.api.GetBookById;
+import fr.ikisource.biblion.book.domain.api.ListBooks;
+import fr.ikisource.biblion.book.domain.api.LookupBookByIsbn;
+import fr.ikisource.biblion.book.domain.spi.BookMetadataLookup;
 import fr.ikisource.biblion.book.domain.spi.BookRepository;
 import fr.ikisource.biblion.book.infrastructure.BookController;
 import fr.ikisource.biblion.book.infrastructure.BookJooqRepository;
+import fr.ikisource.biblion.book.infrastructure.GoogleBooksMetadataLookup;
 import gg.jte.ContentType;
 import gg.jte.TemplateEngine;
 import gg.jte.resolve.DirectoryCodeResolver;
@@ -20,7 +30,6 @@ import org.jooq.impl.DSL;
 import javax.sql.DataSource;
 import java.nio.file.Path;
 import java.time.Instant;
-import java.util.List;
 import java.util.Map;
 
 public class Application {
@@ -40,19 +49,17 @@ public class Application {
             config.fileRenderer(new JavalinJte(engine));
         });
 
-        app.get("/", ctx -> {
-            List<String> titles = db.select(DSL.field("title", String.class))
-                    .from(DSL.table("book"))
-                    .orderBy(DSL.field("created_at").desc())
-                    .fetch(DSL.field("title", String.class));
-            ctx.render("index.jte", Map.of("title", "Biblion", "books", titles));
-        });
-
-        app.get("/ping", ctx -> ctx.html("<p>Pong! " + Instant.now() + "</p>"));
-
         BookRepository bookRepository = new BookJooqRepository(db);
+        BookMetadataLookup metadataLookup = new GoogleBooksMetadataLookup();
         GetBookById getBookById = new GetBookByIdUseCase(bookRepository);
-        new BookController(getBookById).register(app);
+        ListBooks listBooks = new ListBooksUseCase(bookRepository);
+        AddBookByIsbn addBookByIsbn = new AddBookByIsbnUseCase(bookRepository, metadataLookup);
+        LookupBookByIsbn lookupBookByIsbn = new LookupBookByIsbnUseCase(bookRepository, metadataLookup);
+        DeleteBook deleteBook = new DeleteBookUseCase(bookRepository);
+
+        app.get("/", ctx -> ctx.render("index.jte", Map.of("books", listBooks.execute())));
+        app.get("/ping", ctx -> ctx.html("<p>Pong! " + Instant.now() + "</p>"));
+        new BookController(getBookById, listBooks, addBookByIsbn, lookupBookByIsbn, deleteBook).register(app);
 
         app.start(8080);
     }

@@ -1,34 +1,58 @@
+@import fr.ikisource.biblion.book.domain.Book
 @import java.util.List
-@param String title
-@param List<String> books
+@param List<Book> books
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>${title}</title>
-    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
-    <style>
-        body { font-family: system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
-        h1 { color: #2c3e50; }
-        ul { line-height: 1.8; }
-    </style>
-</head>
-<body>
-    <h1>${title}</h1>
-    <p>Bienvenue dans Biblion — votre bibliothèque personnelle.</p>
+@template.layout(title = "Biblion", content = @`
+    <hgroup>
+        <h1>Biblion</h1>
+        <p>Votre bibliothèque personnelle.</p>
+    </hgroup>
 
-    <h2>Livres (${books.size()})</h2>
-    @if(books.isEmpty())
-        <p><em>Aucun livre pour le moment.</em></p>
-    @else
-        <ul>
-        @for(String book : books)
-            <li>${book}</li>
-        @endfor
-        </ul>
-    @endif
+    <article>
+        <h2>Ajouter un livre</h2>
+        <form hx-post="/books"
+              hx-target="#book-list"
+              hx-swap="afterbegin"
+              hx-on::after-request="
+                  if (event.target !== this) return;
+                  var f = document.getElementById('form-feedback');
+                  if (event.detail.successful) { this.reset(); f.textContent = ''; document.getElementById('book-preview').innerHTML = ''; }
+                  else { f.textContent = event.detail.xhr.responseText || 'Erreur'; }
+              ">
+            <label for="isbn">ISBN <small>(obligatoire)</small></label>
+            <input type="text" id="isbn" name="isbn" required placeholder="9782070408504"
+                   hx-get="/books/lookup"
+                   hx-trigger="change, keyup changed delay:500ms"
+                   hx-target="#book-preview"
+                   hx-swap="innerHTML">
+            <div id="book-preview"></div>
+            <details>
+                <summary>Saisie manuelle (si l'ISBN n'est pas reconnu)</summary>
+                <label for="title">Titre</label>
+                <input type="text" id="title" name="title">
+                <label for="author">Auteur</label>
+                <input type="text" id="author" name="author">
+            </details>
+            <button type="submit">Ajouter</button>
+        </form>
+        <p id="form-feedback" role="alert"></p>
+    </article>
 
-    <button hx-get="/ping" hx-swap="outerHTML">Tester htmx</button>
-</body>
-</html>
+    <h2>Catalogue (${books.size()})</h2>
+
+    <table class="striped">
+        <thead>
+            <tr>
+                <th scope="col">Titre</th>
+                <th scope="col">Auteur</th>
+                <th scope="col">ISBN</th>
+                <th scope="col"></th>
+            </tr>
+        </thead>
+        <tbody id="book-list">
+            @for(Book book : books)
+                @template.book.row(book = book)
+            @endfor
+        </tbody>
+    </table>
+`)

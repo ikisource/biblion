@@ -2,11 +2,13 @@ package fr.ikisource.biblion.book.infrastructure;
 
 import fr.ikisource.biblion.book.domain.Book;
 import fr.ikisource.biblion.book.domain.BookId;
+import fr.ikisource.biblion.book.domain.Isbn;
 import fr.ikisource.biblion.book.domain.spi.BookRepository;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.impl.DSL;
 
+import java.util.List;
 import java.util.Optional;
 
 public class BookJooqRepository implements BookRepository {
@@ -21,6 +23,7 @@ public class BookJooqRepository implements BookRepository {
     public Optional<Book> findById(BookId id) {
         return db.select(
                         DSL.field("id", Long.class),
+                        DSL.field("isbn", String.class),
                         DSL.field("title", String.class),
                         DSL.field("author", String.class))
                 .from(DSL.table("book"))
@@ -29,9 +32,54 @@ public class BookJooqRepository implements BookRepository {
                 .map(this::toBook);
     }
 
+    @Override
+    public Optional<Book> findByIsbn(Isbn isbn) {
+        return db.select(
+                        DSL.field("id", Long.class),
+                        DSL.field("isbn", String.class),
+                        DSL.field("title", String.class),
+                        DSL.field("author", String.class))
+                .from(DSL.table("book"))
+                .where(DSL.field("isbn", String.class).eq(isbn.value()))
+                .fetchOptional()
+                .map(this::toBook);
+    }
+
+    @Override
+    public List<Book> findAll() {
+        return db.select(
+                        DSL.field("id", Long.class),
+                        DSL.field("isbn", String.class),
+                        DSL.field("title", String.class),
+                        DSL.field("author", String.class))
+                .from(DSL.table("book"))
+                .orderBy(DSL.field("title"))
+                .fetch(this::toBook);
+    }
+
+    @Override
+    public void delete(BookId id) {
+        db.deleteFrom(DSL.table("book"))
+                .where(DSL.field("id", Long.class).eq(id.value()))
+                .execute();
+    }
+
+    @Override
+    public Book save(Book book) {
+        Long id = db.insertInto(DSL.table("book"))
+                .set(DSL.field("isbn", String.class), book.isbn().value())
+                .set(DSL.field("title", String.class), book.title())
+                .set(DSL.field("author", String.class), book.author())
+                .returning(DSL.field("id", Long.class))
+                .fetchOne()
+                .get(DSL.field("id", Long.class));
+        return new Book(new BookId(id), book.isbn(), book.title(), book.author());
+    }
+
     private Book toBook(Record record) {
         return new Book(
                 new BookId(record.get("id", Long.class)),
+                new Isbn(record.get("isbn", String.class)),
                 record.get("title", String.class),
                 record.get("author", String.class)
         );
