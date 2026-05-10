@@ -96,6 +96,46 @@ book/
 | `GET` | `/books` | Liste JSON triée par titre |
 | `GET` | `/books/{id}` | Un livre (404 si inconnu, 400 si id invalide) |
 
+## Templates JTE — mode de compilation
+
+JTE peut fonctionner selon deux modes, qui dictent à quel moment les
+templates sont compilés en classes Java.
+
+| Mode | Compilation | Usage |
+|---|---|---|
+| **DirectoryCodeResolver** *(actuel)* | runtime | dev — feedback instantané sans redémarrage |
+| **Précompilé** *(non activé)* | au build (Gradle) | prod — performance, JAR auto-suffisant |
+
+### Mode actuel : runtime
+
+Configuré dans `Application.java` :
+
+```java
+TemplateEngine engine = TemplateEngine.create(
+        new DirectoryCodeResolver(Path.of("src/main/jte")),
+        ContentType.Html
+);
+```
+
+À chaque modification d'un `.jte`, JTE :
+
+1. génère une classe Java équivalente (`JteindexGenerated.java`, etc.) ;
+2. la compile à la volée ;
+3. cache le résultat dans le dossier `jte-classes/` à la racine du projet.
+
+C'est ce qui permet de modifier un template **sans redémarrer le serveur** —
+la prochaine requête utilise la nouvelle version. Le dossier `jte-classes/`
+est entièrement régénéré et n'est donc **pas versionné** (ignoré par
+`.gitignore`).
+
+### Bascule vers précompilé
+
+Quand on voudra packager pour déployer (JAR via `./gradlew shadowJar`),
+on activera le plugin Gradle `gg.jte.gradle` qui compile les templates au
+build. Les `.jte` ne seront plus lus en runtime, et `jte-classes/` ne
+sera plus créé. Ce chantier reste à faire le jour où la cible n'est plus
+seulement la machine de dev.
+
 ## Mise en place de l'environnement
 
 ### Prérequis
