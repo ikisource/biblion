@@ -21,12 +21,7 @@ public class BookJooqRepository implements BookRepository {
 
     @Override
     public Optional<Book> findById(BookId id) {
-        return db.select(
-                        DSL.field("id", Long.class),
-                        DSL.field("isbn", String.class),
-                        DSL.field("title", String.class),
-                        DSL.field("author", String.class))
-                .from(DSL.table("book"))
+        return select()
                 .where(DSL.field("id", Long.class).eq(id.value()))
                 .fetchOptional()
                 .map(this::toBook);
@@ -34,12 +29,7 @@ public class BookJooqRepository implements BookRepository {
 
     @Override
     public Optional<Book> findByIsbn(Isbn isbn) {
-        return db.select(
-                        DSL.field("id", Long.class),
-                        DSL.field("isbn", String.class),
-                        DSL.field("title", String.class),
-                        DSL.field("author", String.class))
-                .from(DSL.table("book"))
+        return select()
                 .where(DSL.field("isbn", String.class).eq(isbn.value()))
                 .fetchOptional()
                 .map(this::toBook);
@@ -47,12 +37,7 @@ public class BookJooqRepository implements BookRepository {
 
     @Override
     public List<Book> findAll() {
-        return db.select(
-                        DSL.field("id", Long.class),
-                        DSL.field("isbn", String.class),
-                        DSL.field("title", String.class),
-                        DSL.field("author", String.class))
-                .from(DSL.table("book"))
+        return select()
                 .orderBy(DSL.field("title"))
                 .fetch(this::toBook);
     }
@@ -70,10 +55,21 @@ public class BookJooqRepository implements BookRepository {
                 .set(DSL.field("isbn", String.class), book.isbn() != null ? book.isbn().value() : null)
                 .set(DSL.field("title", String.class), book.title())
                 .set(DSL.field("author", String.class), book.author())
+                .set(DSL.field("cover_url", String.class), book.coverUrl())
                 .returning(DSL.field("id", Long.class))
                 .fetchOne()
                 .get(DSL.field("id", Long.class));
-        return new Book(new BookId(id), book.isbn(), book.title(), book.author());
+        return new Book(new BookId(id), book.isbn(), book.title(), book.author(), book.coverUrl());
+    }
+
+    private org.jooq.SelectJoinStep<? extends Record> select() {
+        return db.select(
+                        DSL.field("id", Long.class),
+                        DSL.field("isbn", String.class),
+                        DSL.field("title", String.class),
+                        DSL.field("author", String.class),
+                        DSL.field("cover_url", String.class))
+                .from(DSL.table("book"));
     }
 
     private Book toBook(Record record) {
@@ -82,7 +78,8 @@ public class BookJooqRepository implements BookRepository {
                 new BookId(record.get("id", Long.class)),
                 rawIsbn != null ? new Isbn(rawIsbn) : null,
                 record.get("title", String.class),
-                record.get("author", String.class)
+                record.get("author", String.class),
+                record.get("cover_url", String.class)
         );
     }
 }

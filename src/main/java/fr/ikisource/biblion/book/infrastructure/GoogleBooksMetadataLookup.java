@@ -77,6 +77,10 @@ public class GoogleBooksMetadataLookup implements BookMetadataLookup {
                     .map(JsonNode::asText)
                     .collect(Collectors.joining(", "));
         }
-        return Optional.of(new BookMetadata(title, author));
+        String coverUrl = info.path("imageLinks").path("thumbnail").asText(null);
+        if (coverUrl != null && coverUrl.startsWith("http://")) {
+            coverUrl = "https://" + coverUrl.substring(7);
+        }
+        return Optional.of(new BookMetadata(title, author, coverUrl));
     }
 }

@@ -133,8 +133,9 @@ public class BookController {
         return new BookResponse(book.id().value(),
                 book.isbn() != null ? book.isbn().value() : null,
                 book.title(),
-                book.author());
+                book.author(),
+                book.coverUrl());
     }
 
-    private record BookResponse(long id, String isbn, String title, String author) {}
+    private record BookResponse(long id, String isbn, String title, String author, String coverUrl) {}
 }

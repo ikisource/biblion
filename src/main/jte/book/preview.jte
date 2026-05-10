@@ -9,10 +9,17 @@
 @elseif("found".equals(state) && metadata != null)
     <article>
         <header>Trouvé sur Google Books</header>
-        <strong>${metadata.title()}</strong>
-        @if(metadata.author() != null)
-            <br>${metadata.author()}
-        @endif
+        <div style="display: flex; gap: 1rem; align-items: flex-start;">
+            @if(metadata.coverUrl() != null)
+                <img src="${metadata.coverUrl()}" alt="Couverture" style="height: 100px; width: auto;">
+            @endif
+            <div>
+                <strong>${metadata.title()}</strong>
+                @if(metadata.author() != null)
+                    <br>${metadata.author()}
+                @endif
+            </div>
+        </div>
     </article>
 @elseif("not-found".equals(state))
     <article>

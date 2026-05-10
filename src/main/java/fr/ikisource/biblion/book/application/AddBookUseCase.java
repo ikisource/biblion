@@ -31,10 +31,11 @@ public class AddBookUseCase implements AddBook {
         }
         String title = firstNonBlank(command.manualTitle(), metadata.map(BookMetadata::title).orElse(null));
         String author = firstNonBlank(command.manualAuthor(), metadata.map(BookMetadata::author).orElse(null));
+        String coverUrl = metadata.map(BookMetadata::coverUrl).orElse(null);
         if (title == null) {
             throw new MissingBookTitleException(command.isbn());
         }
-        return books.save(new Book(null, command.isbn(), title, author));
+        return books.save(new Book(null, command.isbn(), title, author, coverUrl));
     }
 
     private static String firstNonBlank(String a, String b) {

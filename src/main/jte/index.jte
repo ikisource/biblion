@@ -41,6 +41,7 @@
     <table class="striped">
         <thead>
             <tr>
+                <th scope="col"></th>
                 <th scope="col">Titre</th>
                 <th scope="col">Auteur</th>
                 <th scope="col">ISBN</th>
